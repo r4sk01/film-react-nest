@@ -31,6 +31,12 @@ MongoDB должна быть установлена и запущена.
 
 Для проверки отправьте тестовый запрос с помощью Postman или `curl`.
 
+## Тестирование при помощи CURL
+
+1) Получить все фильмы:
+`curl -X GET http://localhost:3000/api/afisha/films`
+2) Получить расписание фильма:
+`curl -X GET http://localhost:3000/api/afisha/films/0e33c7f6-27a7-4aa0-8e61-65d7e5effecf/schedule`
 
 
 
