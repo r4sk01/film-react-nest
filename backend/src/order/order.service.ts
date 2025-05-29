@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { FilmsRepository } from 'src/repository/films.repository';
+import { FilmsRepository } from 'src/films/films.repository';
 import { CreateOrdersDto, ReturnError, ReturnOrdersDto } from './dto/order.dto';
-import { OrdersRepository } from 'src/repository/orders.repository';
+import { OrdersRepository } from 'src/order/orders.repository';
+import { GetFilmDto } from 'src/films/dto/films.dto';
 
 @Injectable()
 export class OrderService {
@@ -14,55 +15,62 @@ export class OrderService {
     createOrderDto: Omit<CreateOrdersDto, 'id'>,
   ): Promise<ReturnOrdersDto | ReturnError> {
     try {
-      // 1) fetch all films in one go
-      const filmIds = [...new Set(createOrderDto.tickets.map((t) => t.film))];
-      const films = await this.filmsRepository.findByIds(filmIds);
+      // Get Unique Film IDs
+      const uniqueFilmIds = [
+        ...new Set(createOrderDto.tickets.map((ticket) => ticket.film)),
+      ];
 
-      // 2) validate each ticket’s seat
-      for (const ticket of createOrderDto.tickets) {
-        const film = films.find((f) => f.id === ticket.film);
-        if (!film) throw new Error(`Film ${ticket.film} not found`);
-
-        const schedule = film.schedule.find(
-          (s) => s.id === ticket.session && s.daytime === ticket.daytime,
-        );
-        if (!schedule)
-          throw new Error(
-            `Session ${ticket.session} not found for film ${ticket.film}`,
-          );
-
-        const seatKey = `${ticket.row}:${ticket.seat}`;
-        if (schedule.taken.includes(seatKey))
-          throw new Error('Seat already taken');
-      }
-
-      // 3) create the order
-      const savedOrder =
-        await this.ordersRepository.createOrder(createOrderDto);
-
-      // 4) atomically push each seat into the film document
-      await Promise.all(
-        createOrderDto.tickets.map((ticket) => {
-          const seatKey = `${ticket.row}:${ticket.seat}`;
-          return this.filmsRepository.updateScheduleSeat(
-            ticket.film,
-            ticket.session,
-            seatKey,
-          );
-        }),
+      // Fetch Films in Parallel
+      const films = await Promise.all(
+        uniqueFilmIds.map((filmId) =>
+          this.filmsRepository.findFilmById(filmId),
+        ),
       );
 
-      // 5) return
+      // Create a Map for ~O(1) Film Lookup
+      const filmsMap = new Map<string, GetFilmDto>();
+      films.forEach((film) => filmsMap.set(film.id, film));
+
+      // Create a Map for ~O(1) Schedule Lookup
+      const schedulesMap = new Map();
+      films.forEach((film) => {
+        film.schedule.forEach((schedule) => {
+          schedulesMap.set(schedule.id, {
+            ...schedule,
+            filmId: film.id,
+            takenSeatsSet: new Set(schedule.taken),
+          });
+        });
+      });
+
+      // Check Seat Availability in O(n)
+      for (const ticket of createOrderDto.tickets) {
+        const schedule = schedulesMap.get(ticket.session);
+
+        if (!schedule) {
+          throw new Error(`Schedule with ID ${ticket.session} not found`);
+        }
+
+        if (schedule.daytime !== ticket.daytime) {
+          throw new Error(`Daytime mismatch for session ${ticket.session}`);
+        }
+
+        const seatKey = `${ticket.row}:${ticket.seat}`;
+        if (schedule.takenSeatsSet.has(seatKey)) {
+          throw new Error('Билеты с такими данными уже существует');
+        }
+      }
+
+      const result = await this.ordersRepository.createOrder(createOrderDto);
+
+      await this.filmsRepository.updateFilmSchedules(
+        createOrderDto.tickets,
+        films,
+      );
+
       return {
-        total: savedOrder.tickets.length,
-        items: savedOrder.tickets.map((t) => ({
-          film: t.film.toString(),
-          session: t.session,
-          daytime: t.daytime,
-          row: t.row,
-          seat: t.seat,
-          price: t.price,
-        })),
+        total: result.tickets.length,
+        items: result.tickets,
       };
     } catch (e) {
       return { error: e.message };
