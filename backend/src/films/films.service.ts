@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FilmsRepository } from '../repository/films.repository';
+import { FilmsRepository } from './films.repository';
 import { ReturnError, ReturnFilms, ReturnSchedules } from './dto/films.dto';
 
 @Injectable()

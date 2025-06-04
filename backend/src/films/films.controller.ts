@@ -13,7 +13,7 @@ export class FilmsController {
 
   @Get('/')
   async findFilmsAll(): Promise<ReturnFilms> {
-    return this.filmsService.findAll();
+    return await this.filmsService.findAll();
   }
 
   @Get('/:id/schedule/')
