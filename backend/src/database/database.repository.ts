@@ -1,6 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
-import { GetFilmDto } from 'src/films/dto/films.dto';
-import { CreateTicketDto, CreateOrdersDto } from 'src/order/dto/order.dto';
+import { GetFilmDto } from '../films/dto/films.dto';
+import { CreateTicketDto, CreateOrdersDto } from '../order/dto/order.dto';
 import { PostgresRepository } from './postgresql.repository';
 import { MongodbRepository } from './mongodb.repository';
 import { ConfigService } from '@nestjs/config';

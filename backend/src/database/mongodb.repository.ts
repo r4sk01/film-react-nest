@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { GetFilmDto } from 'src/films/dto/films.dto';
-import { CreateTicketDto, CreateOrdersDto } from 'src/order/dto/order.dto';
-import { Film } from 'src/films/films.schema';
-import { Order } from 'src/order/order.schema';
+import { GetFilmDto } from '../films/dto/films.dto';
+import { CreateTicketDto, CreateOrdersDto } from '../order/dto/order.dto';
+import { Film } from '../films/films.schema';
+import { Order } from '../order/order.schema';
 import { faker } from '@faker-js/faker';
 
 @Injectable()
