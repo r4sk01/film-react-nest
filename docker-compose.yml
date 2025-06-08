@@ -1,0 +1,81 @@
+services:
+  backend:
+    image: r4sk01/film-react-nest-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    depends_on:
+      - db
+    networks:
+      - backend_network
+    env_file:
+      - backend/.env
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+
+  frontend:
+    image: r4sk01/film-react-nest-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    networks:
+      - backend_network
+    volumes:
+      - frontend_dist:/app/dist
+    env_file:
+      - frontend/.env
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@root.by
+      PGADMIN_DEFAULT_PASSWORD: root
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin/data
+    ports:
+      - 8080:80
+    networks:
+      - backend_network
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres
+    container_name: postgres
+    networks:
+      - backend_network
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: test_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - frontend_network
+      - backend_network
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - frontend_dist:/var/www/frontend:ro
+
+networks:
+  backend_network:
+  frontend_network:
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  frontend_dist:
