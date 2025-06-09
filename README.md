@@ -1,5 +1,8 @@
 # FILM!
 
+## Ссылка на проект
+http://abachinin.students.nomorepartiessbs.ru/
+
 ## Установка
 
 ### MongoDB
