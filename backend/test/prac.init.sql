@@ -36,3 +36,29 @@ create table public.schedules
 
 alter table public.schedules
     owner to prac;
+
+CREATE TABLE public.orders
+(
+    id    uuid    DEFAULT uuid_generate_v4() PRIMARY KEY,
+    email varchar NOT NULL,
+    phone varchar NOT NULL
+);
+
+alter table public.orders
+    owner to prac;
+
+CREATE TABLE public.ticket
+(
+    id        uuid    DEFAULT uuid_generate_v4() PRIMARY KEY,
+    film      varchar NOT NULL,
+    session   varchar NOT NULL,
+    daytime   varchar NOT NULL,
+    row       integer NOT NULL,
+    seat      integer NOT NULL,
+    price     double precision NOT NULL,
+    "orderId" uuid,
+    CONSTRAINT "FK_ticket_order" FOREIGN KEY ("orderId") REFERENCES public.orders(id)
+);
+
+alter table public.ticket
+    owner to prac;
