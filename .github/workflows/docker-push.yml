@@ -1,0 +1,52 @@
+name: Build & Push Docker images to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+      - review
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Клонируем код
+      - uses: actions/checkout@v4
+
+      # 2) Поднимаем QEMU и Buildx для multi-arch
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3) Логинимся в Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 4) Сборка и пуш backend
+      - name: Build & push backend image
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -f backend/Dockerfile \
+            -t r4sk01/film-react-nest-backend:latest \
+            --push \
+            ./backend
+
+      # 5) Сборка и пуш frontend
+      - name: Build & push frontend image
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -f frontend/Dockerfile \
+            -t r4sk01/film-react-nest-frontend:latest \
+            --push \
+            ./frontend

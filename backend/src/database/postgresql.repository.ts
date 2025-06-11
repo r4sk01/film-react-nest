@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetFilmDto } from 'src/films/dto/films.dto';
-import { Films } from 'src/films/film.entity';
-import { Schedules } from 'src/films/schedule.entity';
-import { Orders } from 'src/order/order.entity';
-import { Ticket } from 'src/order/ticket.entity';
-import { CreateTicketDto, CreateOrdersDto } from 'src/order/dto/order.dto';
+import { GetFilmDto } from '../films/dto/films.dto';
+import { Films } from '../films/film.entity';
+import { Schedules } from '../films/schedule.entity';
+import { Orders } from '../order/order.entity';
+import { Ticket } from '../order/ticket.entity';
+import { CreateTicketDto, CreateOrdersDto } from '../order/dto/order.dto';
 import { Repository } from 'typeorm';
 import { faker } from '@faker-js/faker';
 
